@@ -1,12 +1,16 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+
 
 export default function Initiatives() {
   // Hero section refs
   const heroLinesRef = useRef(null);
 
+
   // Main content refs
   const tagRef = useRef(null);
   const contentRef = useRef(null);
+
 
   // Flowchart refs
   const flowHeadingRef = useRef(null);
@@ -14,6 +18,7 @@ export default function Initiatives() {
   const svgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const stepRefs = useRef(Array.from({ length: 7 }, () => React.createRef())).current;
+
 
   // Programs and Add-ons refs
   const subheadRef = useRef(null);
@@ -25,18 +30,22 @@ export default function Initiatives() {
   const aspirantRef = useRef(null);
   const raiderzRef = useRef(null);
 
+
   // Refs for auto-scrolling logic
   const autoScrollIntervalRef = useRef(null);
   const currentStepIndexRef = useRef(0);
   const scrollSetupDone = useRef(false);
 
+
   // Trigger redraw of connectors when layout changes
   const [drawTick, setDrawTick] = useState(0);
+
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
 
   // Master scroll reveal effect
   useEffect(() => {
@@ -55,8 +64,10 @@ export default function Initiatives() {
       { element: raiderzRef.current, threshold: 0.4 },
     ].filter(item => item.element);
 
+
     let observer = null;
     let currentIndex = 0;
+
 
     const setupObserver = () => {
       if (currentIndex >= elementsToReveal.length) {
@@ -81,9 +92,11 @@ export default function Initiatives() {
       observer.observe(element);
     };
 
+
     setupObserver();
     return () => observer?.disconnect();
   }, []);
+
 
   // Timeline auto-scroll logic
   useEffect(() => {
@@ -92,6 +105,7 @@ export default function Initiatives() {
       if (!scrollContainer) return;
       const steps = stepRefs.map((ref) => ref.current).filter(Boolean);
       if (steps.length === 0) return;
+
 
       const startAutoScroll = () => {
         if (autoScrollIntervalRef.current) return;
@@ -111,13 +125,16 @@ export default function Initiatives() {
         autoScrollIntervalRef.current = null;
       };
 
+
       scrollContainer.addEventListener("pointerenter", stopAutoScroll);
       scrollContainer.addEventListener("wheel", stopAutoScroll, { passive: true });
       scrollContainer.addEventListener("touchstart", stopAutoScroll, { passive: true });
       scrollContainer.addEventListener("pointerleave", startAutoScroll);
 
+
       startAutoScroll();
       scrollSetupDone.current = true;
+
 
       return () => {
         stopAutoScroll();
@@ -131,6 +148,7 @@ export default function Initiatives() {
     }
   }, [drawTick, stepRefs]);
 
+
   // Draw SVG serpentine path
   useLayoutEffect(() => {
     const svg = svgRef.current;
@@ -141,15 +159,19 @@ export default function Initiatives() {
     const rows = stepRefs.map((r) => r.current).filter(Boolean);
     if (rows.length < 2) return;
 
+
     const draw = () => {
       const gridRect = grid.getBoundingClientRect();
       if (gridRect.width < 5 || gridRect.height < 5) return;
+
 
       svg.setAttribute("width", gridRect.width);
       svg.setAttribute("height", gridRect.height);
       svg.setAttribute("viewBox", `0 0 ${gridRect.width} ${gridRect.height}`);
 
+
       while (svg.firstChild) svg.removeChild(svg.firstChild);
+
 
       const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
       const lg = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
@@ -161,6 +183,7 @@ export default function Initiatives() {
       s2.setAttribute("offset", "100%"); s2.setAttribute("stop-color", "rgba(18,231,207,0.4)");
       lg.appendChild(s1); lg.appendChild(s2); defs.appendChild(lg); svg.appendChild(defs);
 
+
       const midY = (el) => {
         const r = el.getBoundingClientRect();
         return r.top + r.height / 2 - gridRect.top;
@@ -168,18 +191,22 @@ export default function Initiatives() {
       const leftX = (el) => el.getBoundingClientRect().left - gridRect.left;
       const rightX = (el) => el.getBoundingClientRect().right - gridRect.left;
 
+
       for (let i = 0; i < rows.length - 1; i++) {
         const from = rows[i];
         const to = rows[i + 1];
         const isRight = i % 2 === 0;
+
 
         const x1 = isRight ? rightX(from) : leftX(from);
         const y1 = midY(from);
         const x2 = isRight ? rightX(to) : leftX(to);
         const y2 = midY(to);
 
+
         const h = Math.max(60, Math.abs(x2 - x1) * 0.25);
         const v = Math.max(50, Math.abs(y2 - y1) * 0.6);
+
 
         const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
         p.setAttribute("d", `M ${x1} ${y1} C ${isRight ? x1 + h : x1 - h} ${y1 + v}, ${isRight ? x2 + h : x2 - h} ${y2 - v}, ${x2} ${y2}`);
@@ -190,6 +217,7 @@ export default function Initiatives() {
         p.setAttribute("opacity", "0.9");
         svg.appendChild(p);
 
+
         const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         dot.setAttribute("cx", x2);
         dot.setAttribute("cy", y2);
@@ -199,20 +227,25 @@ export default function Initiatives() {
       }
     };
 
+
     draw();
     requestAnimationFrame(draw);
+
 
     const ro = new ResizeObserver(() => draw());
     ro.observe(grid);
 
+
     const onLoad = () => draw();
     window.addEventListener("load", onLoad);
+
 
     return () => {
       ro.disconnect();
       window.removeEventListener("load", onLoad);
     };
   }, [drawTick, stepRefs]);
+
 
   // Redraw connectors on viewport resize
   useEffect(() => {
@@ -222,6 +255,7 @@ export default function Initiatives() {
     const t2 = setTimeout(onResize, 800);
     return () => { window.removeEventListener("resize", onResize); clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
 
   return (
     <main className="initiatives-root">
@@ -233,21 +267,22 @@ export default function Initiatives() {
         <span className="dollar dollar-far-2 show" aria-hidden="true">$</span>
         <span className="dollar dollar-far-3 show" aria-hidden="true">$</span>
 
+
         <div className="container hero-title-wrap">
           {/* Original title */}
           <h1 ref={heroLinesRef} className="hero-title show">
             <span className="reveal">
-              <span className="line">Our</span>
-              <span className="line">Initiatives</span>
             </span>
           </h1>
 
+
           {/* Overlay fallback title (always on top). Hidden if original is clearly visible */}
           <h1 className="hero-title-overlay" aria-hidden="true">
-            Our<br/>Initiatives
+            Our<br />Initiatives
           </h1>
         </div>
       </header>
+
 
       {/* Tagline and content section */}
       <section className="writeup container">
@@ -264,10 +299,12 @@ export default function Initiatives() {
         </p>
       </section>
 
+
       {/* Flow heading */}
       <section className="container flow-heading">
         <h2 ref={flowHeadingRef} className="subhead subhead-line fade-stage">How we activate your “Silent Potential”?</h2>
       </section>
+
 
       {/* Flowchart */}
       <section ref={flowRef} className="flow container fade-stage">
@@ -313,6 +350,7 @@ export default function Initiatives() {
               "Unsure of live vs. funded? Start small, grow consistently, then scale into funded accounts with a clear plan.",
             ];
 
+
             return (
               <div
                 key={idx}
@@ -331,11 +369,13 @@ export default function Initiatives() {
         </div>
       </section>
 
+
       {/* Programs Offered */}
       <section className="programs container">
         <h2 ref={subheadRef} className="subhead subhead-line fade-stage">Programs Offered</h2>
+        
 
-        <article ref={progARef} className="prog-card fade-stage">
+        <article ref={progARef} className="prog-card prog-card--main fade-stage">
           <div className="prog-head">
             <h3>Code of Consistency</h3>
             <span className="price">$249</span>
@@ -346,9 +386,16 @@ export default function Initiatives() {
             <li>Gain emotional control and market discipline with live trading support and exclusive Discord community access.</li>
             <li>Participate in regular Q&A sessions to enhance continuous learning and trader self-awareness.</li>
           </ul>
+          <Link
+            to="/form"
+            state={{ programTitle: "Apply - Code of Consistency" }}
+            className="btn-enroll btn-enroll--main-bottom-right">
+            Enroll Now
+          </Link>
         </article>
 
-        <article ref={progBRef} className="prog-card fade-stage">
+
+        <article ref={progBRef} className="prog-card prog-card--main fade-stage">
           <div className="prog-head">
             <h3>The Guaranteed Edge</h3>
             <span className="price">$149</span>
@@ -360,8 +407,15 @@ export default function Initiatives() {
             <li>Cyclic Profit Booking: Each structured cycle finishes with locked-in gains before the next cycle begins.</li>
             <li>Consisteny : 10% per month profit assurance.</li>
           </ul>
+          <Link
+            to="/form"
+            state={{ programTitle: "Apply - The Guaranteed Edge" }}
+            className="btn-enroll btn-enroll--main-bottom-right">
+            Enroll Now
+          </Link>
         </article>
       </section>
+
 
       {/* What else can we do for you? */}
       <section className="writeup container new-section">
@@ -371,30 +425,46 @@ export default function Initiatives() {
         </p>
       </section>
 
+
       {/* Add-ons */}
       <section className="programs container addons-section">
         <h2 ref={addonSubheadRef} className="subhead no-line fade-stage">Add-ons</h2>
+        
 
-        <article ref={aspirantRef} className="prog-card fade-stage">
+        <article ref={aspirantRef} className="prog-card prog-card--addon fade-stage">
           <div className="prog-head">
             <h3>Aspirants Entrygate</h3>
             <span className="price">$13</span>
+            <Link
+              to="/form"
+              state={{ programTitle: "Apply - Live Trades Callouts & Investment Insights" }}
+              className="btn-enroll btn-enroll--addon-top-right">
+              Enroll Now
+            </Link>
           </div>
           <p className="prog-desc">
             Access the Silent Equity Discord server's exclusive supports for a month.
           </p>
         </article>
 
-        <article ref={raiderzRef} className="prog-card fade-stage">
+
+        <article ref={raiderzRef} className="prog-card prog-card--addon fade-stage">
           <div className="prog-head">
             <h3>Raiderz</h3>
             <span className="price">$13</span>
+            <Link
+              to="/form"
+              state={{ programTitle: "Apply - Discord Premium Membership Access" }}
+              className="btn-enroll btn-enroll--addon-top-right">
+              Enroll Now
+            </Link>
           </div>
           <p className="prog-desc">
             Too unwilling to learn or busy? Hold on, we got your back. Join as our Raider and get access to exclusive callouts of forex markets and investment insights.
           </p>
         </article>
       </section>
+
 
       <style>{`
         :root{
@@ -403,9 +473,12 @@ export default function Initiatives() {
           --accent:#12e7cf; --accent2:#7ff7ea; --muted:#bfe9e6;
           --panel:#0f1923; --panel2:#0b1319; --border:rgba(122,255,244,.22);
           --path:#58e9da;
+          --button-bg: #12e7cf;
+          --button-fg: #012326;
         }
         .initiatives-root{ min-height:100vh; background:var(--bg); color:var(--fg); }
         .container{ max-width:1100px; margin:0 auto; padding:0 6vw; }
+
 
         .initiatives-hero{
           position:relative; overflow:hidden;
@@ -416,6 +489,7 @@ export default function Initiatives() {
             #0e171d;
           isolation:isolate; /* local stacking context for predictable layering */
         }
+
 
         /* Ensure original title layers above decor */
         .hero-title-wrap{ position:relative; z-index:3; }
@@ -429,84 +503,91 @@ export default function Initiatives() {
         }
         @media (max-width: 768px){ .hero-title { text-align:center; } }
 
+
         /* Fallback overlay title: sits exactly above the original location */
         /* Fallback overlay title: shifted right with page load-only animation */
-.hero-title-overlay{
-  position:absolute; inset:auto auto auto 0;
-  left: clamp(8%, 12vw, 15%); /* moved more to the right */
-  top:0;
-  transform: translateY(0);
-  width:100%;
-  text-align:left;
-  pointer-events:none;
-  color:#eafdfd;
-  font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif;
-  font-weight:900; letter-spacing:.6px;
-  font-size:clamp(1.8rem,8vw,3rem); line-height:1.05;
-  z-index:5; /* above dollars */
-  
-  /* Page load-only animation */
-  opacity:0;
-  transform: translateX(-20px) translateY(10) scale(0.95);
-  animation: heroTitleLoad 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms forwards;
-}
+        .hero-title-overlay{
+          position:absolute; inset:auto auto auto 0;
+          left: clamp(8%, 12vw, 15%); /* moved more to the right */
+          top:0;
+          transform: translateY(0);
+          width:100%;
+          text-align:left;
+          pointer-events:none;
+          color:#eafdfd;
+          font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif;
+          font-weight:900; letter-spacing:.6px;
+          font-size:clamp(1.8rem,8vw,3rem); line-height:1.05;
+          z-index:5; /* above dollars */
+          
+          /* Page load-only animation */
+          opacity:0;
+          transform: translateX(-20px) translateY(10) scale(0.95);
+          animation: heroTitleLoad 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms forwards;
+        }
 
-@media (max-width:768px){ 
-  .hero-title-overlay{ 
-    left: 50%; 
-    transform: translateX(-50%) translateY(-15px) scale(0.95);
-    text-align:center;
-    animation: heroTitleLoadMobile 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms forwards;
-  } 
-}
 
-@keyframes heroTitleLoad{
-  0%{ 
-    opacity:0; 
-    transform: translateX(-30px) translateY(0) scale(0.95);
-    filter: blur(2px);
-  }
-  60%{ 
-    opacity:0.8; 
-    transform: translateX(5px) translateY(0) scale(1.02);
-    filter: blur(0.5px);
-  }
-  100%{ 
-    opacity:1; 
-    transform: translateX(0) translateY(0) scale(1);
-    filter: blur(0px);
-  }
-}
+        @media (max-width:768px){ 
+          .hero-title-overlay{ 
+            left: 50%; 
+            transform: translateX(-50%) translateY(-15px) scale(0.95);
+            text-align:center;
+            animation: heroTitleLoadMobile 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms forwards;
+          } 
+        }
 
-@keyframes heroTitleLoadMobile{
-  0%{ 
-    opacity:0; 
-    transform: translateX(-50%) translateY(-15px) scale(0.95);
-    filter: blur(2px);
-  }
-  60%{ 
-    opacity:0.8; 
-    transform: translateX(-50%) translateY(2px) scale(1.02);
-    filter: blur(0.5px);
-  }
-  100%{ 
-    opacity:1; 
-    transform: translateX(-50%) translateY(0) scale(1);
-    filter: blur(0px);
-  }
-}
 
-/* Disable animation for reduced motion preference */
-@media (prefers-reduced-motion:reduce){
-  .hero-title-overlay{ 
-    animation:none !important; 
-    opacity:1 !important; 
-    transform: translateX(0) translateY(0) scale(1) !important;
-    filter: none !important;
-  }
-}
+        @keyframes heroTitleLoad{
+          0%{ 
+            opacity:0; 
+            transform: translateX(-30px) translateY(0) scale(0.95);
+            filter: blur(2px);
+          }
+          60%{ 
+            opacity:0.8; 
+            transform: translateX(5px) translateY(0) scale(1.02);
+            filter: blur(0.5px);
+          }
+          100%{ 
+            opacity:1; 
+            transform: translateX(0) translateY(0) scale(1);
+            filter: blur(0px);
+          }
+        }
+
+
+        @keyframes heroTitleLoadMobile{
+          0%{ 
+            opacity:0; 
+            transform: translateX(-50%) translateY(-15px) scale(0.95);
+            filter: blur(2px);
+          }
+          60%{ 
+            opacity:0.8; 
+            transform: translateX(-50%) translateY(2px) scale(1.02);
+            filter: blur(0.5px);
+          }
+          100%{ 
+            opacity:1; 
+            transform: translateX(-50%) translateY(0) scale(1);
+            filter: blur(0px);
+          }
+        }
+
+
+        /* Disable animation for reduced motion preference */
+        @media (prefers-reduced-motion:reduce){
+          .hero-title-overlay{ 
+            animation:none !important; 
+            opacity:1 !important; 
+            transform: translateX(0) translateY(0) scale(1) !important;
+            filter: none !important;
+          }
+        }
+
 
         @media (max-width:768px){ .hero-title-overlay{ text-align:center; } }
+
 
         /* Dollars */
         .dollar{
@@ -530,6 +611,7 @@ export default function Initiatives() {
         @keyframes dollarIn{ 0%{opacity:0;transform:translateY(10px) scale(.94) rotate(var(--rot,0deg));filter:blur(3px)} 60%{transform:translateY(-2px);opacity:1;transform:translateY(-2px) scale(1.02) rotate(var(--rot,0deg));filter:blur(.5px)} 100%{transform:translateY(0);opacity:1;transform:translateY(0) scale(1) rotate(var(--rot,0deg))}}
         @keyframes glowPulse{0%,100%{text-shadow:0 0 18px rgba(18,231,207,.15),0 8px 28px rgba(0,0,0,.45)}50%{text-shadow:0 0 26px rgba(18,231,207,.22),0 10px 32px rgba(0,0,0,.5)}}
 
+
         /* Reveal sweep is translucent so text is never hidden */
         .reveal{ display:inline-block; position:relative; overflow:hidden; }
         .reveal::before{
@@ -544,21 +626,25 @@ export default function Initiatives() {
         @keyframes lineUp{0%{transform:translateY(24px);opacity:0}60%{transform:translateY(-2px);opacity:1}100%{transform:translateY(0);opacity:1}}
         @keyframes sweep{0%{transform:translateX(-120%);opacity:0}40%{opacity:.9}100%{transform:translateX(120%);opacity:0}}
 
+
         /* Mobile: remove overlapping decor to guarantee heading visibility */
         @media (max-width: 768px) {
           .dollar{ display:none; }
           .initiatives-hero{ padding: clamp(28px, 14vh, 120px) 6vw clamp(22px, 10vh, 70px); }
         }
 
+
         .writeup{ padding: clamp(22px, 6vh, 60px) 0 clamp(40px, 10vh, 90px); }
         @media (max-width: 768px) { .writeup { padding: 40px 0; } .tagline { font-size: 1rem; padding: 10px 12px; text-align: center; } }
         .fade-stage{ opacity:0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease; }
         .show.fade-stage { opacity: 1 !important; transform: translateY(0) !important; }
 
-        .tagline{ margin:0; font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; font-weight:900; letter-spacing:.3px; font-size: clamp(1rem, 2.6vw, 1.25rem); color: var(--fg); background: linear-gradient(90deg, rgba(18,231,207,.18), rgba(127,247,234,.08) 60%, transparent); border:1px solid rgba(127,247,234,.28); padding:12px 14px; border-radius:12px; box-shadow:0 18px 36px rgba(0,0,0,.36); }
+
+        .tagline{ margin:0; font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; font-weight:900; letter-spacing:.3px; font-size: clamp(1rem, 2.6vw, 1.25rem); color: var(--fg); background: linear-gradient(90deg, rgba(18,231,207,.18), rgba(127,247,234,.08) 60%, transparent); border:1px solid rgba(127,255,244,.28); padding:12px 14px; border-radius:12px; box-shadow:0 18px 36px rgba(0,0,0,.36); }
         .tagline .muted{ color: var(--muted); }
         .bodycopy{ margin:16px 0 0; color: var(--muted); line-height:1.8; font-size: clamp(.95rem, 2.2vw, 1.02rem); background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 40%); padding: 8px 2px 0; }
         @media (max-width: 768px) { .bodycopy { font-size: .92rem; text-align: center; } }
+
 
         .flow-heading{ padding: clamp(18px, 4vh, 26px) 0 8px; }
         .subhead{
@@ -575,6 +661,7 @@ export default function Initiatives() {
           .subhead { text-align: center; width: 100%; }
           .subhead-line::after { left: 50%; transform: translateX(-50%); width: 80%; }
         }
+
 
         .flow-steps{
           position:relative;
@@ -595,7 +682,8 @@ export default function Initiatives() {
         .row-content h3{ margin:0 0 6px; font-weight:800; font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; letter-spacing:.2px; font-size: clamp(0.98rem, 3.2vw, 1.12rem); color:var(--fg); }
         .row-content p{ margin:0; color: var(--muted); line-height:1.7; max-width: 980px; }
         .flow-row.right .row-content{ margin-left: 2px; }
-        .flow-row.left  .row-content{ margin-left: 2px; }
+        .flow-row.left  .row-content{ margin-left: 2px; }
+
 
         @media (max-width: 768px) {
           .flow-steps { padding-left: 10vw; padding-right: 10vw; gap: 20px; }
@@ -604,28 +692,128 @@ export default function Initiatives() {
           .flow-row .badge { margin-bottom: 8px; }
         }
 
+
         .programs{ padding: clamp(16px, 6vh, 60px) 0 clamp(36px, 10vh, 90px); display:grid; gap:18px; }
         .programs .subhead{ opacity:0; transform: translateY(8px); transition: opacity .4s ease, transform .4s ease; }
         .programs .subhead.show{ opacity:1; transform: translateY(0); }
 
-        .prog-card{ display:flex; gap:16px; align-items:flex-start; background: linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid var(--border); border-radius:16px; padding:16px 18px; box-shadow: 0 28px 60px rgba(0,0,0,.38); transform: translateY(8px); opacity:0; transition: opacity .4s ease, transform .4s ease; }
+
+        .prog-card{ position: relative; display:flex; flex-direction: column; gap:16px; align-items:flex-start; background: linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid var(--border); border-radius:16px; padding:16px 18px; box-shadow: 0 28px 60px rgba(0,0,0,.38); transform: translateY(8px); opacity:0; transition: opacity .4s ease, transform .4s ease; }
         .prog-card.show{ opacity:1; transform: translateY(0); }
-        .prog-head{ flex:1 1 100%; display:flex; flex-direction:column; gap:8px; }
+        .prog-head{ flex:1 1 100%; display:flex; flex-direction:column; gap:8px; position:relative; }
         .prog-head h3{ margin:0; font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; font-weight:800; letter-spacing:.2px; font-size: clamp(1rem, 3.2vw, 1.25rem); color:var(--fg); }
         .prog-points{ margin:0; padding-left:1.1rem; color:var(--muted); display:grid; gap:.5rem; line-height:1.6; }
         .prog-desc{ margin:0; color:var(--muted); line-height:1.6; }
 
+
+        .price{ font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; font-weight:700; font-size:1.1rem; color:var(--accent); white-space:nowrap; }
+
+
+        .btn-enroll {
+          display: inline-block;
+          font-family: 'Orbitron', sans-serif;
+          font-weight: 700;
+          font-size: clamp(0.85rem, 2vw, 1rem);
+          padding: 10px 18px;
+          border-radius: 8px;
+          background: var(--button-bg);
+          color: var(--button-fg);
+          text-decoration: none;
+          text-align: center;
+          transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+          border: none;
+          cursor: pointer;
+        }
+
+
+        .btn-enroll:hover {
+          background-color: var(--accent2);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(18, 231, 207, 0.3);
+        }
+        
+        /* New styling for buttons */
+        .btn-enroll--addon-top-right {
+          position: absolute;
+          top: 16px;
+          right: 18px;
+        }
+
+        .btn-enroll--main-bottom-right {
+          position: absolute;
+          bottom: 16px;
+          right: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .btn-enroll--main-bottom-right, .btn-enroll--addon-top-right {
+                position: static;
+                margin-top: 12px;
+                width: 100%;
+                order: 3; /* Push to the end of flex container */
+            }
+            
+            .prog-card--main {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .prog-card--main .prog-head {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+            }
+
+            .prog-card--main .prog-head .price {
+                margin: 0;
+            }
+
+            .prog-card--main .prog-head h3 {
+                width: 100%;
+            }
+
+            .prog-points {
+              padding-left: 0;
+              list-style-position: inside;
+            }
+
+            .prog-card--addon {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                text-align: center;
+            }
+            .prog-card--addon .prog-head {
+                position: relative;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+            }
+            .prog-card--addon .prog-head .price {
+                margin: 0;
+            }
+            .prog-card--addon .prog-desc {
+                text-align: center;
+            }
+
+        }
+
+
         .new-section{ padding: clamp(22px, 6vh, 60px) 0 clamp(40px, 10vh, 90px); }
         @media (max-width: 768px) { .new-section .bodycopy { text-align: center; } }
+
 
         .addons-section{ padding-top: 0; display:grid; gap:20px; }
         @media (min-width: 768px){ .addons-section{ grid-template-columns: 1fr 1fr; } }
         .addons-section .subhead{ margin-bottom: 24px; width:100%; }
         .addons-section .subhead.no-line::after{ content: none; }
         .addons-section .prog-card{ flex-direction: column; gap: 12px; }
-        .addons-section .prog-head{ flex-direction:row; justify-content:space-between; align-items:flex-start; }
 
-        .price{ font-family:'Orbitron','Space Grotesk',Poppins,system-ui,sans-serif; font-weight:700; font-size:1.1rem; color:var(--accent); white-space:nowrap; }
 
         @media (prefers-reduced-motion:reduce){
           .fade-stage{ opacity:1 !important; transform:none !important; transition:none !important; }
